@@ -1,2 +1,1 @@
-# yt_subtitles-helper
-Ferramenta de legendagem com cronômetro integrado. 
+É uma ferramenta de legendagem com cronômetro integrado. Você inicia o timer enquanto assiste ao vídeo e usa os botões "Marcar entrada" e "Marcar saída" para capturar os timestamps automaticamente. Para cada legenda você edita o tempo manualmente se precisar e escreve o texto. No final, exporta tudo como um arquivo .srt pronto para subir no YouTube.
