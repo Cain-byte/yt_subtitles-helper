@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Editor de Legendas SRT</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f5f5f3;
+    color: #1a1a1a;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+
+  .root {
+    max-width: 680px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  h1 {
+    font-size: 16px;
+    font-weight: 500;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+  }
+
+  .card {
+    background: #ffffff;
+    border: 0.5px solid rgba(0,0,0,0.12);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+  }
+
+  .label {
+    font-size: 11px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 10px;
+  }
+
+  .timer-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .timer {
+    font-size: 28px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    color: #1a1a1a;
+    min-width: 110px;
+    letter-spacing: 1px;
+  }
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-family: inherit;
+    border-radius: 8px;
+    border: 0.5px solid rgba(0,0,0,0.2);
+    background: transparent;
+    color: #1a1a1a;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.12s;
+  }
+
+  button:hover { background: #f0f0ee; }
+  button:active { transform: scale(0.98); }
+
+  button.btn-dark {
+    background: #1a1a1a;
+    color: #ffffff;
+    border-color: #1a1a1a;
+  }
+  button.btn-dark:hover { background: #333; }
+
+  button.btn-sm { padding: 5px 10px; font-size: 12px; }
+
+  button.btn-icon {
+    padding: 6px 8px;
+    color: #c0392b;
+    border-color: rgba(192,57,43,0.25);
+  }
+  button.btn-icon:hover { background: #fdf0ee; }
+
+  button.btn-danger {
+    color: #c0392b;
+    border-color: rgba(192,57,43,0.25);
+  }
+  button.btn-danger:hover { background: #fdf0ee; }
+
+  .entries {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 10px;
+  }
+
+  .entry {
+    display: grid;
+    grid-template-columns: 18px auto 1fr auto;
+    align-items: start;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 0.5px solid rgba(0,0,0,0.08);
+  }
+
+  .entry:last-child { border-bottom: none; }
+
+  .entry-num {
+    font-size: 12px;
+    color: #bbb;
+    padding-top: 8px;
+  }
+
+  .times {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .time-field {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .time-badge {
+    font-size: 11px;
+    color: #999;
+    width: 36px;
+  }
+
+  input.time-input {
+    font-size: 12px;
+    font-family: 'Courier New', monospace;
+    padding: 4px 8px;
+    border-radius: 8px;
+    border: 0.5px solid rgba(0,0,0,0.15);
+    background: #f5f5f3;
+    color: #1a1a1a;
+    width: 112px;
+  }
+
+  input.time-input:focus {
+    outline: none;
+    border-color: rgba(0,0,0,0.4);
+    background: #fff;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 52px;
+    resize: vertical;
+    font-size: 13px;
+    font-family: inherit;
+    line-height: 1.5;
+    border: 0.5px solid rgba(0,0,0,0.15);
+    border-radius: 8px;
+    padding: 7px 10px;
+    background: #fff;
+    color: #1a1a1a;
+  }
+
+  textarea:focus {
+    outline: none;
+    border-color: rgba(0,0,0,0.4);
+  }
+
+  .footer-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .srt-preview {
+    display: none;
+    margin-top: 12px;
+  }
+
+  .srt-box {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    color: #666;
+    background: #f5f5f3;
+    border: 0.5px solid rgba(0,0,0,0.1);
+    border-radius: 8px;
+    padding: 12px;
+    white-space: pre;
+    overflow-x: auto;
+    max-height: 240px;
+    overflow-y: auto;
+  }
+
+  svg.icon {
+    width: 15px;
+    height: 15px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+<div class="root">
+
+  <div class="card">
+    <div class="label">Cronômetro</div>
+    <div class="timer-row">
+      <span class="timer" id="timerDisplay">00:00:00</span>
+      <button class="btn-dark" id="btnPlay" onclick="toggleTimer()">
+        <svg class="icon" id="iconPlay" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+        <span id="btnLabel">Iniciar</span>
+      </button>
+      <button onclick="resetTimer()">
+        <svg class="icon" viewBox="0 0 24 24"><polyline points="1,4 1,10 7,10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+        Zerar
+      </button>
+      <button onclick="stampIn()">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        Entrada
+      </button>
+      <button onclick="stampOut()">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/></svg>
+        Saída
+      </button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">Legendas</div>
+    <div class="entries" id="entryList"></div>
+    <button class="btn-sm" onclick="addEntry()">
+      <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Adicionar linha
+    </button>
+  </div>
+
+  <div class="footer-row">
+    <button class="btn-dark" onclick="genSRT()">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Baixar .srt
+    </button>
+    <button onclick="copySRT()">
+      <svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Copiar
+    </button>
+    <button class="btn-danger" onclick="clearAll()">
+      <svg class="icon" viewBox="0 0 24 24"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      Limpar
+    </button>
+  </div>
+
+  <div class="srt-preview" id="srtPreview">
+    <div class="srt-box" id="srtBox"></div>
+  </div>
+
+</div>
+
+<script>
+let ms = 0, running = false, iv = null;
+let entries = [];
+
+function pad(n, z=2){ return String(n).padStart(z,'0'); }
+function msToDisp(t){ return `${pad(Math.floor(t/3600000))}:${pad(Math.floor((t%3600000)/60000))}:${pad(Math.floor((t%60000)/1000))}`; }
+function msToSRT(t){ return `${pad(Math.floor(t/3600000))}:${pad(Math.floor((t%3600000)/60000))}:${pad(Math.floor((t%60000)/1000))},${pad(t%1000,3)}`; }
+function srtToMs(v){
+  v = v.replace('.', ',');
+  let [hms, mil='000'] = v.split(',');
+  let [h,m,s] = (hms||'0:0:0').split(':').map(Number);
+  return ((h*3600)+(m*60)+(s||0))*1000 + Number(mil);
+}
+
+function toggleTimer(){
+  running = !running;
+  if(running){
+    iv = setInterval(()=>{ ms+=100; document.getElementById('timerDisplay').textContent=msToDisp(ms); },100);
+    document.getElementById('iconPlay').innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+    document.getElementById('btnLabel').textContent = 'Pausar';
+  } else {
+    clearInterval(iv);
+    document.getElementById('iconPlay').innerHTML = '<polygon points="5,3 19,12 5,21"/>';
+    document.getElementById('btnLabel').textContent = 'Continuar';
+  }
+}
+
+function resetTimer(){
+  clearInterval(iv); running=false; ms=0;
+  document.getElementById('timerDisplay').textContent='00:00:00';
+  document.getElementById('iconPlay').innerHTML='<polygon points="5,3 19,12 5,21"/>';
+  document.getElementById('btnLabel').textContent='Iniciar';
+}
+
+function stampIn(){ addEntry(ms, 0, ''); }
+function stampOut(){
+  if(!entries.length) return;
+  let e=entries[entries.length-1];
+  if(!e.end){ e.end=ms; render(); }
+}
+function addEntry(start=0, end=0, text=''){ entries.push({start,end,text}); render(); }
+function removeEntry(i){ entries.splice(i,1); render(); }
+
+function render(){
+  const list = document.getElementById('entryList');
+  list.innerHTML = '';
+  entries.forEach((e,i) => {
+    const row = document.createElement('div');
+    row.className = 'entry';
+    row.innerHTML = `
+      <span class="entry-num">${i+1}</span>
+      <div class="times">
+        <div class="time-field"><span class="time-badge">Início</span><input class="time-input" value="${msToSRT(e.start)}" onchange="entries[${i}].start=srtToMs(this.value)"></div>
+        <div class="time-field"><span class="time-badge">Fim</span><input class="time-input" value="${msToSRT(e.end)}" onchange="entries[${i}].end=srtToMs(this.value)"></div>
+      </div>
+      <textarea placeholder="Texto da legenda..." onchange="entries[${i}].text=this.value">${e.text||''}</textarea>
+      <button class="btn-icon" onclick="removeEntry(${i})" title="Remover">
+        <svg class="icon" viewBox="0 0 24 24"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+      </button>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function buildSRT(){
+  return entries.map((e,i)=>`${i+1}\n${msToSRT(e.start)} --> ${msToSRT(e.end||e.start+2000)}\n${e.text||''}`).join('\n\n');
+}
+function genSRT(){
+  const srt=buildSRT();
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([srt],{type:'text/plain'}));
+  a.download='legenda.srt'; a.click();
+  showPreview(srt);
+}
+function copySRT(){ const srt=buildSRT(); navigator.clipboard.writeText(srt).catch(()=>{}); showPreview(srt); }
+function showPreview(srt){ document.getElementById('srtBox').textContent=srt; document.getElementById('srtPreview').style.display='block'; }
+function clearAll(){ entries=[]; render(); document.getElementById('srtPreview').style.display='none'; }
+
+addEntry(0, 2000, '');
+</script>
+</body>
+</html>
